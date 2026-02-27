@@ -1,6 +1,6 @@
 # Section 5: Long Context & Memory
 
-> **학습 목표**: LLM이 긴 문서를 어떻게 처리하는지, Retrieval-Augmented Generation(RAG)의 전체 파이프라인, 그리고 모델의 "기억"을 확장하는 다양한 기법들을 깊이 이해한다.
+> **학습 목표**: LLM이 긴 문서를 어떻게 처리하는지, Retrieval-Augmented Generation(RAG)의 전체 파이프라인, 그리고 모델의 "기억"을 확장하는 다양한 기법들.
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### Context Window란?
 
-Transformer 기반 언어 모델은 **한 번에 처리할 수 있는 토큰 수에 제한**이 있다. 이 최대 토큰 수를 **context window** (또는 context length)라고 부른다. Context window 안에 있는 토큰들만이 attention 계산에 참여할 수 있으며, 그 밖의 정보는 모델이 "볼 수 없다".
+Transformer 기반 언어 모델은 **한 번에 처리할 수 있는 토큰 수에 제한**이 있음. 이 최대 토큰 수를 **context window** (또는 context length)라고 부름. Context window 안에 있는 토큰들만이 attention 계산에 참여할 수 있으며, 그 밖의 정보는 모델이 "볼 수 없음".
 
 ```
 [system prompt | user input | retrieved documents | model output]
@@ -33,7 +33,7 @@ Transformer 기반 언어 모델은 **한 번에 처리할 수 있는 토큰 수
 
 #### 1. Attention Memory: O(N²) 문제
 
-Transformer의 self-attention은 모든 토큰 쌍 사이의 attention score를 계산한다:
+Transformer의 self-attention은 모든 토큰 쌍 사이의 attention score를 계산함:
 
 ```
 Attention(Q, K, V) = softmax(QK^T / √d_k) · V
@@ -42,7 +42,7 @@ Attention(Q, K, V) = softmax(QK^T / √d_k) · V
 - `Q, K, V` ∈ ℝ^(N × d_k) 행렬
 - `QK^T` 계산 결과는 ℝ^(N × N) 행렬
 
-따라서 메모리 사용량은 **O(N²)** 로 증가한다:
+따라서 메모리 사용량은 **O(N²)** 로 증가함:
 
 | Context Length | Attention Matrix 크기 | 메모리 (fp16, 1 head) |
 |---|---|---|
@@ -51,17 +51,17 @@ Attention(Q, K, V) = softmax(QK^T / √d_k) · V
 | 128K | 128K × 128K = 16B | ~32 GB |
 | 1M | 1M × 1M = 1T | ~2 TB (!!) |
 
-Gemini 1.5가 1M context를 달성할 수 있었던 핵심 기술 중 하나는 **Flash Attention** (memory-efficient attention 알고리즘, Section 4에서 다룸)과 함께 **Ring Attention** (여러 디바이스에 걸쳐 attention을 분산)을 사용했기 때문이다.
+Gemini 1.5가 1M context를 달성할 수 있었던 핵심 기술 중 하나는 **Flash Attention** (memory-efficient attention 알고리즘, Section 4에서 다룸)과 함께 **Ring Attention** (여러 디바이스에 걸쳐 attention을 분산)을 사용했기 때문.
 
 #### 2. Positional Encoding Extrapolation 문제
 
-원래 Transformer는 **sinusoidal positional encoding** 또는 **learned positional embedding**을 사용했다. 이 방식들은 학습 때 본 길이 이상으로는 **일반화(extrapolation)가 매우 나쁘다**.
+원래 Transformer는 **sinusoidal positional encoding** 또는 **learned positional embedding**을 사용했음. 이 방식들은 학습 때 본 길이 이상으로는 **일반화(extrapolation)가 매우 나쁨**.
 
-예를 들어 최대 2K 토큰으로 학습한 모델에게 4K 토큰의 텍스트를 주면, 2K 이상의 position에 대한 embedding 값을 모델이 학습한 적이 없으므로 성능이 급격히 떨어진다.
+예를 들어 최대 2K 토큰으로 학습한 모델에게 4K 토큰의 텍스트를 주면, 2K 이상의 position에 대한 embedding 값을 모델이 학습한 적이 없으므로 성능이 급격히 떨어짐.
 
-**RoPE (Rotary Position Embedding)**는 이 문제를 부분적으로 해결한다. LLaMA, Mistral, Gemma 등 현대 모델 대부분이 RoPE를 사용한다.
+**RoPE (Rotary Position Embedding)**는 이 문제를 부분적으로 해결함. LLaMA, Mistral, Gemma 등 현대 모델 대부분이 RoPE를 사용함.
 
-RoPE는 position `m`에서의 벡터를 다음과 같이 회전 행렬로 표현한다:
+RoPE는 position `m`에서의 벡터를 다음과 같이 회전 행렬로 표현함:
 
 ```
 f(x, m) = x · e^(i·m·θ)
@@ -69,7 +69,7 @@ f(x, m) = x · e^(i·m·θ)
 θ_j = 1 / (10000^(2j/d))   (j = 0, 1, ..., d/2 - 1)
 ```
 
-Q와 K의 내적이 relative position `m - n`에만 의존하게 되어, 학습 때 보지 못한 긴 sequence로 어느 정도 외삽(extrapolation)할 수 있다.
+Q와 K의 내적이 relative position `m - n`에만 의존하게 되어, 학습 때 보지 못한 긴 sequence로 어느 정도 외삽(extrapolation)할 수 있음.
 
 **RoPE Scaling 기법들:**
 
@@ -82,7 +82,7 @@ Q와 K의 내적이 relative position `m - n`에만 의존하게 되어, 학습 
 
 #### 3. Lost-in-the-Middle Problem
 
-Context window가 길어지면 모델이 **긴 context 중간에 위치한 정보를 잘 활용하지 못하는** 현상이 관찰된다.
+Context window가 길어지면 모델이 **긴 context 중간에 위치한 정보를 잘 활용하지 못하는** 현상이 관찰됨.
 
 Stanford 연구팀의 2023년 논문 "Lost in the Middle"에 따르면:
 
@@ -101,7 +101,7 @@ Stanford 연구팀의 2023년 논문 "Lost in the Middle"에 따르면:
   첫 번째              중간          마지막
 ```
 
-모델은 context의 **처음**과 **끝** 부분에 있는 정보를 훨씬 잘 활용한다. 이는 RAG 시스템 설계에서 중요한 시사점을 갖는다: **가장 관련성 높은 청크를 context의 앞부분이나 뒷부분에 배치**해야 한다.
+모델은 context의 **처음**과 **끝** 부분에 있는 정보를 훨씬 잘 활용함. 이는 RAG 시스템 설계에서 중요한 시사점을 가짐: **가장 관련성 높은 청크를 context의 앞부분이나 뒷부분에 배치**해야 함.
 
 이 현상의 원인으로는:
 - Attention score의 **recency bias** (최근 토큰에 더 집중)
@@ -112,11 +112,11 @@ Stanford 연구팀의 2023년 논문 "Lost in the Middle"에 따르면:
 
 ## 5.2 Chunking Strategies
 
-RAG 시스템의 첫 번째 단계는 긴 문서를 검색 가능한 단위인 **chunk**로 나누는 것이다. Chunking 전략은 retrieval 품질에 직접적인 영향을 미친다.
+RAG 시스템의 첫 번째 단계는 긴 문서를 검색 가능한 단위인 **chunk**로 나눔. Chunking 전략은 retrieval 품질에 직접적인 영향을 미침.
 
 ### 5.2.1 Fixed-Size Chunking
 
-가장 단순한 방법: **N개의 토큰(또는 문자)마다 고정적으로 분할**한다.
+가장 단순한 방법: **N개의 토큰(또는 문자)마다 고정적으로 분할**함.
 
 ```python
 def fixed_size_chunking(text, chunk_size=512, overlap=50):
@@ -136,7 +136,7 @@ def fixed_size_chunking(text, chunk_size=512, overlap=50):
 
 ### 5.2.2 Sentence/Paragraph-Aware Chunking
 
-텍스트의 **자연스러운 경계** (문장 끝, 단락 끝)를 존중하면서 분할한다.
+텍스트의 **자연스러운 경계** (문장 끝, 단락 끝)를 존중하면서 분할함.
 
 ```python
 import re
@@ -167,11 +167,11 @@ def sentence_aware_chunking(text, max_tokens=512):
     return chunks
 ```
 
-**단락(paragraph) 기반 분할**은 더욱 의미 단위를 잘 보존한다. HTML 문서라면 `<p>` 태그, Markdown이라면 `\n\n` 기준으로 나눌 수 있다.
+**단락(paragraph) 기반 분할**은 더욱 의미 단위를 잘 보존함. HTML 문서라면 `<p>` 태그, Markdown이라면 `\n\n` 기준으로 나눌 수 있음.
 
 ### 5.2.3 Semantic Chunking
 
-**의미적으로 유사한 문장들을 하나의 chunk로 묶는** 방법이다. 문장들을 embedding하고, 인접 문장 간의 cosine similarity가 급격히 떨어지는 지점을 경계로 삼는다.
+**의미적으로 유사한 문장들을 하나의 chunk로 묶는** 방법. 문장들을 embedding하고, 인접 문장 간의 cosine similarity가 급격히 떨어지는 지점을 경계로 삼음.
 
 ```
 문장 1 ——similarity=0.92—— 문장 2 ——similarity=0.88—— 문장 3
@@ -212,7 +212,7 @@ def semantic_chunking(sentences, embeddings, threshold=0.5):
 
 ### 5.2.4 Chunk Overlap
 
-연속된 chunk 간에 **겹치는 부분(overlap)**을 두면 chunk 경계에서 잘리는 정보를 보완할 수 있다.
+연속된 chunk 간에 **겹치는 부분(overlap)**을 두면 chunk 경계에서 잘리는 정보를 보완할 수 있음.
 
 ```
 Chunk 1: [토큰 1 ~ 512]
@@ -227,7 +227,7 @@ Overlap이 너무 크면:
 Overlap이 너무 작으면:
 - 중요한 정보가 chunk 경계에서 소실
 
-일반적으로 **chunk size의 10~20%**가 적절한 overlap 크기로 권장된다.
+일반적으로 **chunk size의 10~20%**가 적절한 overlap 크기로 권장됨.
 
 ### 5.2.5 Chunk Size가 Retrieval Quality에 미치는 영향
 
@@ -237,7 +237,7 @@ Overlap이 너무 작으면:
 | **중간** (256~512 tokens) | 균형 잡힌 성능 | 대부분의 경우 권장 |
 | **너무 큼** (1K~2K tokens) | 풍부한 맥락 제공 | 관련 없는 내용 포함, embedding이 희석됨 |
 
-**Parent-Child Chunking** 전략: 큰 청크(parent)를 검색 인덱스에 저장하되, 실제 retrieval 시에는 작은 청크(child)로 검색하고, 생성 시에는 parent 청크의 내용을 제공한다.
+**Parent-Child Chunking** 전략: 큰 청크(parent)를 검색 인덱스에 저장하되, 실제 retrieval 시에는 작은 청크(child)로 검색하고, 생성 시에는 parent 청크의 내용을 제공함.
 
 ---
 
@@ -245,9 +245,9 @@ Overlap이 너무 작으면:
 
 ### RAG의 동기
 
-LLM은 학습 데이터의 **knowledge cutoff** 이후 정보를 모른다. 또한 model weights에 사실 정보를 "압축"하는 과정에서 **hallucination(환각)**이 발생할 수 있다.
+LLM은 학습 데이터의 **knowledge cutoff** 이후 정보를 모름. 또한 model weights에 사실 정보를 "압축"하는 과정에서 **hallucination(환각)**이 발생할 수 있음.
 
-RAG는 이를 해결하기 위해 **관련 문서를 동적으로 검색하여 LLM의 context에 제공**한다:
+RAG는 이를 해결하기 위해 **관련 문서를 동적으로 검색하여 LLM의 context에 제공**함:
 
 ```
 [Query] → [Retriever] → [Top-K Chunks] → [LLM] → [Answer]
@@ -259,7 +259,7 @@ RAG는 이를 해결하기 위해 **관련 문서를 동적으로 검색하여 L
 
 ### 5.3.1 Indexing Phase (오프라인 단계)
 
-문서들을 미리 처리하여 검색 가능한 형태로 저장한다.
+문서들을 미리 처리하여 검색 가능한 형태로 저장함.
 
 ```
 원본 문서들
@@ -294,7 +294,7 @@ vectorstore.save_local("./index/")
 
 ### 5.3.2 Retrieval Phase (실시간 단계)
 
-사용자 query가 들어오면 관련 chunk를 검색한다.
+사용자 query가 들어오면 관련 chunk를 검색함.
 
 ```
 Query: "트랜스포머의 attention은 어떻게 작동하나요?"
@@ -306,7 +306,7 @@ Top-K 청크 = vectorstore.similarity_search(query_vector, k=5)
 
 ### 5.3.3 Generation Phase
 
-검색된 chunk들을 LLM의 context에 삽입하여 답변을 생성한다.
+검색된 chunk들을 LLM의 context에 삽입하여 답변을 생성함.
 
 ```python
 def rag_generate(query, vectorstore, llm, k=5):
@@ -349,7 +349,7 @@ def rag_generate(query, vectorstore, llm, k=5):
 
 ### Dense Vector Representation이란?
 
-**Embedding**은 텍스트(단어, 문장, 문단)를 고차원의 연속적인 벡터 공간에 매핑하는 것이다.
+**Embedding**은 텍스트(단어, 문장, 문단)를 고차원의 연속적인 벡터 공간에 매핑함.
 
 ```
 "고양이" → [0.23, -0.45, 0.71, 0.12, ..., -0.33]  ← 768차원 벡터
@@ -358,7 +358,7 @@ def rag_generate(query, vectorstore, llm, k=5):
 "수학"   → [-0.51, 0.33, -0.12, 0.88, ..., 0.44]  ← 의미적으로 멀리 위치
 ```
 
-핵심 속성: **의미적으로 유사한 텍스트는 벡터 공간에서 가까이 위치**한다.
+핵심 속성: **의미적으로 유사한 텍스트는 벡터 공간에서 가까이 위치**함.
 
 ### 대표적인 Embedding 모델들
 
@@ -397,7 +397,7 @@ cosine_sim(a, b) = (a · b) / (||a|| · ||b||)
 값의 범위: [-1, +1]
 ```
 
-벡터의 **방향**만 비교한다 (크기 정규화). 문서 길이에 관계없이 의미적 유사성을 잘 포착한다.
+벡터의 **방향**만 비교함 (크기 정규화). 문서 길이에 관계없이 의미적 유사성을 잘 포착함.
 
 **Dot Product:**
 ```
@@ -406,7 +406,7 @@ dot_product(a, b) = Σ aᵢ · bᵢ
 값의 범위: (-∞, +∞)
 ```
 
-벡터의 **방향과 크기** 모두 고려한다.
+벡터의 **방향과 크기** 모두 고려함.
 
 | | Cosine Similarity | Dot Product |
 |---|---|---|
@@ -415,7 +415,7 @@ dot_product(a, b) = Σ aᵢ · bᵢ
 | 연산 속도 | 정규화 비용 추가 | 더 빠름 |
 | 권장 사용 | 벡터 크기가 의미 없을 때 | 크기도 중요할 때 |
 
-> 실전 팁: 대부분의 최신 embedding 모델은 **L2 정규화된 벡터**를 출력하므로, cosine similarity와 dot product가 동일하다. 이 경우 dot product가 더 빠르기 때문에 ANN 라이브러리에서 dot product를 사용하는 것이 일반적이다.
+> 실전 팁: 대부분의 최신 embedding 모델은 **L2 정규화된 벡터**를 출력하므로, cosine similarity와 dot product가 동일함. 이 경우 dot product가 더 빠르기 때문에 ANN 라이브러리에서 dot product를 사용하는 것이 일반적.
 
 ### Embedding Space의 흥미로운 속성
 
@@ -425,13 +425,13 @@ embed("왕") - embed("남자") + embed("여자") ≈ embed("여왕")
 ```
 
 **Multilingual Alignment:**
-잘 학습된 다국어 embedding 모델에서는 서로 다른 언어의 같은 의미 표현이 가까운 벡터를 가진다:
+잘 학습된 다국어 embedding 모델에서는 서로 다른 언어의 같은 의미 표현이 가까운 벡터를 가짐:
 ```
 embed("고양이", ko) ≈ embed("cat", en) ≈ embed("猫", zh)
 ```
 
 **Matryoshka Representation Learning (MRL):**
-최신 embedding 모델들은 **차원을 줄여도 성능이 크게 떨어지지 않도록** 학습된다. 예를 들어 1536차원 벡터의 앞 256차원만 사용해도 좋은 성능을 낸다 → 저장 공간과 연산을 절약 가능.
+최신 embedding 모델들은 **차원을 줄여도 성능이 크게 떨어지지 않도록** 학습됨. 예를 들어 1536차원 벡터의 앞 256차원만 사용해도 좋은 성능을 냄 → 저장 공간과 연산을 절약 가능.
 
 ---
 
@@ -439,17 +439,17 @@ embed("고양이", ko) ≈ embed("cat", en) ≈ embed("猫", zh)
 
 ### ANN (Approximate Nearest Neighbor) Search
 
-정확한 최근접 이웃 탐색(Exact Nearest Neighbor Search)은 O(N·d) 복잡도 (N: 벡터 수, d: 차원). 수백만 개의 벡터에서 실시간으로 탐색하려면 **근사 탐색(ANN)**이 필수적이다.
+정확한 최근접 이웃 탐색(Exact Nearest Neighbor Search)은 O(N·d) 복잡도 (N: 벡터 수, d: 차원). 수백만 개의 벡터에서 실시간으로 탐색하려면 **근사 탐색(ANN)**이 필수적.
 
-ANN은 **약간의 정확도를 희생하고 대신 속도를 극적으로 향상**시킨다.
+ANN은 **약간의 정확도를 희생하고 대신 속도를 극적으로 향상**시킴.
 
 주요 ANN 알고리즘:
 
 ### 5.5.1 HNSW (Hierarchical Navigable Small World)
 
-현재 가장 널리 사용되는 ANN 알고리즘이다.
+현재 가장 널리 사용되는 ANN 알고리즘.
 
-**아이디어**: 여러 계층의 그래프를 구성한다. 상위 계층은 sparse한 long-range 연결, 하위 계층은 dense한 short-range 연결.
+**아이디어**: 여러 계층의 그래프를 구성함. 상위 계층은 sparse한 long-range 연결, 하위 계층은 dense한 short-range 연결.
 
 ```
 Layer 2 (Sparse):    *————*————*————*
@@ -548,7 +548,7 @@ distances, indices = index.search(query, k=10)
 
 ### Two-Stage Retrieval 아키텍처
 
-검색 품질을 높이기 위해 **두 단계 검색(two-stage retrieval)**을 사용한다:
+검색 품질을 높이기 위해 **두 단계 검색(two-stage retrieval)**을 사용함:
 
 ```
 Query
@@ -606,7 +606,7 @@ top_5 = [doc for doc, score in reranked[:5]]
 
 ### ColBERT-style Late Interaction
 
-**ColBERT (Contextualized Late Interaction over BERT)**는 bi-encoder와 cross-encoder의 중간에 해당하는 접근법이다.
+**ColBERT (Contextualized Late Interaction over BERT)**는 bi-encoder와 cross-encoder의 중간에 해당하는 접근법.
 
 ```
 Query:  [q₁, q₂, q₃, q₄]  → [Encoder] → [v_q1, v_q2, v_q3, v_q4]
@@ -615,7 +615,7 @@ Doc:    [d₁, d₂, ..., dₙ] → [Encoder] → [v_d1, v_d2, ..., v_dn]
 Score = Σᵢ max_j cosine_sim(v_qi, v_dj)   ← MaxSim 연산
 ```
 
-각 query 토큰이 document의 **가장 유사한 토큰과의 유사도**를 찾는 "late interaction"을 사용한다.
+각 query 토큰이 document의 **가장 유사한 토큰과의 유사도**를 찾는 "late interaction"을 사용함.
 
 **장점**: Cross-encoder보다 빠르면서 bi-encoder보다 정확
 **단점**: 벡터 저장 비용이 bi-encoder보다 N배 (N: 문서 토큰 수) 더 필요
@@ -624,11 +624,11 @@ Score = Σᵢ max_j cosine_sim(v_qi, v_dj)   ← MaxSim 연산
 
 ## 5.7 Query Rewriting
 
-원본 query가 좋지 않거나 (너무 짧거나, 모호하거나), 검색 index에 적합하지 않을 수 있다. **Query rewriting**은 retrieval 전에 query를 변환하여 검색 품질을 높인다.
+원본 query가 좋지 않거나 (너무 짧거나, 모호하거나), 검색 index에 적합하지 않을 수 있음. **Query rewriting**은 retrieval 전에 query를 변환하여 검색 품질을 높임.
 
 ### 5.7.1 HyDE (Hypothetical Document Embedding)
 
-**아이디어**: Query를 직접 검색하는 대신, "이 query에 대한 가상의 이상적인 답변 문서"를 LLM으로 생성하고, 그 가상 문서의 embedding으로 검색한다.
+**아이디어**: Query를 직접 검색하는 대신, "이 query에 대한 가상의 이상적인 답변 문서"를 LLM으로 생성하고, 그 가상 문서의 embedding으로 검색함.
 
 ```
 Query: "블랙홀은 왜 빛을 흡수하는가?"
@@ -655,7 +655,7 @@ def hyde_retrieval(query, llm, vectorstore, k=5):
 
 ### 5.7.2 Query Expansion
 
-Query에 관련 키워드나 동의어를 추가하여 더 많은 관련 문서를 포착한다.
+Query에 관련 키워드나 동의어를 추가하여 더 많은 관련 문서를 포착함.
 
 ```
 원본: "LLM 학습"
@@ -663,7 +663,7 @@ Query에 관련 키워드나 동의어를 추가하여 더 많은 관련 문서�
        GPT fine-tuning OR 트랜스포머 pretraining"
 ```
 
-또는 LLM을 사용해 자동으로 확장:
+또는 LLM을 사용해 자동으로 확장함:
 ```python
 expansion_prompt = f"""
 쿼리: {query}
@@ -676,7 +676,7 @@ expanded_queries = llm.generate(expansion_prompt)
 
 ### 5.7.3 Step-Back Prompting
 
-**아이디어**: 구체적인 질문을 더 일반적인(추상화된) 질문으로 변환한 뒤, 그 일반적 질문으로 먼저 배경 지식을 검색하고, 원래 질문과 합쳐서 답변한다.
+**아이디어**: 구체적인 질문을 더 일반적인(추상화된) 질문으로 변환한 뒤, 그 일반적 질문으로 먼저 배경 지식을 검색하고, 원래 질문과 합쳐서 답변함.
 
 ```
 구체적 질문:
@@ -689,11 +689,11 @@ Step-back 질문 (LLM이 생성):
 → 원본 질문과 배경 지식을 함께 사용하여 최종 답변 생성
 ```
 
-Google DeepMind의 연구에 따르면 step-back prompting은 특히 물리학, 화학 같은 원리 기반 질문에서 성능을 크게 향상시킨다.
+Google DeepMind의 연구에 따르면 step-back prompting은 특히 물리학, 화학 같은 원리 기반 질문에서 성능을 크게 향상시킴.
 
 ### Multi-Query Retrieval
 
-하나의 query 대신 **여러 변형 query를 생성**하고 각각으로 검색한 결과를 합친다:
+하나의 query 대신 **여러 변형 query를 생성**하고 각각으로 검색한 결과를 합침:
 
 ```python
 def multi_query_retrieval(query, llm, vectorstore, n_variants=3):
@@ -721,7 +721,7 @@ def multi_query_retrieval(query, llm, vectorstore, n_variants=3):
 
 ### 긴 문서 처리의 문제
 
-Context window를 초과하는 긴 문서(예: 100페이지 PDF, 긴 소설)를 처리해야 할 때 사용하는 전략이다.
+Context window를 초과하는 긴 문서(예: 100페이지 PDF, 긴 소설)를 처리해야 할 때 사용하는 전략.
 
 ### Sliding Window 방식
 
@@ -773,13 +773,13 @@ def sliding_window_inference(text, llm, window_size=2048, stride=1500):
 
 ### 왜 Memory Compression이 필요한가?
 
-대화가 길어질수록 이전 대화 내용이 context window를 채워나간다. 오래된 대화 내용을 그대로 유지하면:
+대화가 길어질수록 이전 대화 내용이 context window를 채워나감. 오래된 대화 내용을 그대로 유지하면:
 - Context window 낭비
 - 오래된 정보가 최신 정보에 비해 중요도가 낮음
 
 ### Summarization-based Compression
 
-이전 대화를 **요약**하여 압축된 형태로 유지한다:
+이전 대화를 **요약**하여 압축된 형태로 유지함:
 
 ```
 [초기 상태]
@@ -821,7 +821,7 @@ class ConversationMemory:
 
 ### MemGPT 접근법
 
-2023년 발표된 **MemGPT** (Memory GPT)는 OS의 가상 메모리 시스템에서 영감을 받은 계층적 메모리 구조를 제안했다:
+2023년 발표된 **MemGPT** (Memory GPT)는 OS의 가상 메모리 시스템에서 영감을 받은 계층적 메모리 구조를 제안했음:
 
 ```
 ┌─────────────────────────────────────┐
@@ -840,7 +840,7 @@ class ConversationMemory:
 - **Recall Memory**: 이전 대화 내용 (검색 가능한 형태로 저장)
 - **Archival Memory**: 장기 지식 베이스
 
-LLM이 특수 함수 (`archival_memory_insert`, `recall_memory_search` 등)를 호출하여 스스로 메모리를 관리한다.
+LLM이 특수 함수 (`archival_memory_insert`, `recall_memory_search` 등)를 호출하여 스스로 메모리를 관리함.
 
 ### Hierarchical Memory
 
@@ -859,11 +859,11 @@ L3 (의미 기억): 사용자에 대한 장기 프로파일 (고도 압축)
 
 ### 표준 Transformer의 한계
 
-표준 Transformer는 각 segment를 독립적으로 처리한다. Segment 경계를 넘어서는 정보를 전달하려면 이전 내용 전체를 context에 유지해야 한다.
+표준 Transformer는 각 segment를 독립적으로 처리함. Segment 경계를 넘어서는 정보를 전달하려면 이전 내용 전체를 context에 유지해야 함.
 
 ### Recurrent Memory Token 주입
 
-**Recurrent Memory Transformer (RMT)** 는 각 segment 처리 시 **learnable memory token**들을 추가하고, 이를 다음 segment로 전달한다:
+**Recurrent Memory Transformer (RMT)** 는 각 segment 처리 시 **learnable memory token**들을 추가하고, 이를 다음 segment로 전달함:
 
 ```
 Segment 1:
@@ -876,13 +876,13 @@ Segment 2:
 Input: [mem_tokens(segment1 출력)] + [token 513~1024] + [mem_tokens(다음)]
 ```
 
-Memory token들은 gradient를 통해 학습되며, **세그먼트 간에 중요한 정보를 선택적으로 전달**하는 법을 배운다.
+Memory token들은 gradient를 통해 학습되며, **세그먼트 간에 중요한 정보를 선택적으로 전달**하는 법을 배움.
 
-이론적으로 segment 수를 늘리면 무한한 길이의 시퀀스를 처리할 수 있지만, 실제로는 매우 긴 sequence에서 memory token의 정보 bottleneck이 문제가 된다.
+이론적으로 segment 수를 늘리면 무한한 길이의 시퀀스를 처리할 수 있지만, 실제로는 매우 긴 sequence에서 memory token의 정보 bottleneck이 문제가 됨.
 
 ### Mamba: Recurrent Memory로서의 State Space Model
 
-**Mamba** (2023, Gu & Dao)는 **State Space Model (SSM)**에 기반한 아키텍처로, Transformer의 attention을 대체한다.
+**Mamba** (2023, Gu & Dao)는 **State Space Model (SSM)**에 기반한 아키텍처로, Transformer의 attention을 대체함.
 
 핵심 수식:
 ```
@@ -896,8 +896,8 @@ h(t): hidden state (recurrent memory 역할)
 ```
 
 **선택적 처리 (Selective State Spaces)**가 Mamba의 핵심:
-- `A`, `B`, `C`가 입력 `x(t)`에 따라 **동적으로 변화**한다
-- 이를 통해 중요한 정보는 state에 유지하고, 불필요한 정보는 빠르게 잊는다
+- `A`, `B`, `C`가 입력 `x(t)`에 따라 **동적으로 변화**함
+- 이를 통해 중요한 정보는 state에 유지하고, 불필요한 정보는 빠르게 잊음
 
 ```
 Transformer attention: O(N²) 메모리, O(N²) 연산
@@ -913,7 +913,7 @@ Mamba:                 O(N) 메모리,  O(N) 연산
 - 이론적으로는 hidden state `h(t)` 크기에 모든 정보를 압축해야 하므로, 매우 긴 distance의 정확한 recall이 필요한 task에서 Transformer 대비 약함
 - 학습 패러다임이 Transformer와 달라서 기존 인프라 재사용 어려움
 
-실제로는 **Mamba + Transformer의 Hybrid** 아키텍처 (예: Jamba, Zamba)가 두 방식의 장점을 결합하는 방향으로 발전하고 있다.
+실제로는 **Mamba + Transformer의 Hybrid** 아키텍처 (예: Jamba, Zamba)가 두 방식의 장점을 결합하는 방향으로 발전하고 있음.
 
 ---
 

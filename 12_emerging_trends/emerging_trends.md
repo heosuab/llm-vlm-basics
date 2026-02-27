@@ -1,9 +1,5 @@
 # Section 12: Emerging Trends (2024+)
 
-> 현재 LLM/VLM 연구의 가장 활발한 방향들을 정리합니다. Research engineer로서 이 흐름을 파악하는 것이 중요합니다.
-
----
-
 ## Multimodal Scaling Laws
 
 ### 단일 모달리티 Scaling Law를 넘어서
@@ -16,7 +12,7 @@
 - Vision data와 text data의 최적 혼합 비율은?
 - Visual token의 수와 모델 크기의 관계는?
 
-아직 명확한 답이 없으며, 활발히 연구 중인 영역입니다.
+아직 명확한 답이 없으며, 활발히 연구 중인 영역.
 
 ---
 
@@ -24,7 +20,7 @@
 
 ### 초장문 multimodal context
 
-Gemini 1.5의 1M token context는 단순히 텍스트뿐 아니라 이미지, 비디오도 포함할 수 있습니다.
+Gemini 1.5의 1M token context는 단순히 텍스트뿐 아니라 이미지, 비디오도 포함할 수 있음.
 
 **실용적 활용**:
 - 긴 동영상 전체를 컨텍스트로 (1시간 분량의 영상)
@@ -88,7 +84,7 @@ Gemini 1.5의 1M token context는 단순히 텍스트뿐 아니라 이미지, �
 
 ## Multimodal Reasoning Benchmarks
 
-단순 인식(recognition)을 넘어 **추론(reasoning)** 능력을 평가합니다.
+단순 인식(recognition)을 넘어 **추론(reasoning)** 능력을 평가.
 
 **MathVista**: 수학 문제 + 이미지 (차트, 기하학, 그래프)
 **MMSci**: 과학 논문의 이미지 + 텍스트 이해
@@ -100,7 +96,7 @@ Gemini 1.5의 1M token context는 단순히 텍스트뿐 아니라 이미지, �
 
 ### 핵심 아이디어
 
-모델이 **자기 자신의 출력을 사용하여 스스로 개선**합니다.
+모델이 **자기 자신의 출력을 사용하여 스스로 개선**.
 
 **방법 1: RLVR with Verifiable Rewards**
 ```
@@ -121,7 +117,7 @@ Gemini 1.5의 1M token context는 단순히 텍스트뿐 아니라 이미지, �
 → 점점 어려운 문제를 스스로 만들고 풀면서 성장
 ```
 
-**한계**: Verifiable reward가 있는 도메인(수학, 코드)에서만 잘 작동합니다.
+**한계**: Verifiable reward가 있는 도메인(수학, 코드)에서만 잘 작동.
 
 ---
 
@@ -129,7 +125,7 @@ Gemini 1.5의 1M token context는 단순히 텍스트뿐 아니라 이미지, �
 
 ### 개념
 
-LLM이 external tool을 호출하여 지식과 능력을 확장합니다.
+LLM이 external tool을 호출하여 지식과 능력을 확장.
 
 ```
 LLM + Tools:
@@ -167,7 +163,7 @@ Answer: ...
 
 ### LLM Agent
 
-단순한 Q&A를 넘어 **장기적 목표를 달성하기 위해 자율적으로 계획하고 행동**합니다.
+단순한 Q&A를 넘어 **장기적 목표를 달성하기 위해 자율적으로 계획하고 행동**.
 
 ```
 Goal: "내 코드베이스를 분석하고 버그를 찾아서 수정하고 PR을 열어라"
@@ -191,7 +187,7 @@ Agent loop:
 
 ### 문제
 
-LLM을 API로 사용할 때 항상 valid JSON을 반환해야 하는 경우가 많습니다. Inference-time constraint 외에 **학습 자체를 structured output에 맞게** 합니다.
+LLM을 API로 사용할 때 항상 valid JSON을 반환해야 하는 경우가 많습니다. Inference-time constraint 외에 **학습 자체를 structured output에 맞게** 함.
 
 ```python
 # 기존: 자유 텍스트 생성 → JSON parsing 시도 → 실패 가능
@@ -209,7 +205,7 @@ LLM을 API로 사용할 때 항상 valid JSON을 반환해야 하는 경우가 �
 
 ### 단일 거대 모델의 한계
 
-모든 것을 하나의 모델로 처리하는 것이 항상 최선이 아닙니다:
+모든 것을 하나의 모델로 처리하는 것이 항상 최선이 아님:
 - 특정 task에 오버킬 (간단한 분류에 70B 모델 불필요)
 - 특수 domain에서 전문 모델보다 약할 수 있음
 - 모든 모달리티를 하나로 합치면 학습이 복잡

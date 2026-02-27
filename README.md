@@ -7,6 +7,7 @@ LLM/VLM Research Engineer 커리어를 위한 basic 개념 정리
 ## 전체 구조
 
 ```
+# 세부 자료 목차
 llm-vlm-basics/
 ├── 00_foundations/          — 수학·정보이론·최적화 기초
 ├── 01_transformer_architecture/ — Transformer 아키텍처 심화
@@ -21,6 +22,12 @@ llm-vlm-basics/
 ├── 10_benchmarks_evaluation/ — 벤치마크 및 평가 이슈
 ├── 11_safety/               — LLM 안전성
 └── 12_emerging_trends/      — 2024+ 최신 트렌드
+
+# 정리 자료 목차
+llm-vlm-basics/
+├── KEYWORDS_CHEATSHEET.md   — Keywords 종합 정리
+├── TOPICS_CHEATSHEET.md     — 세부 Topics 종합 정리
+└── FURTHER_QUESTIONS.md     - 복습용, 또는 추가적인 further questions 종합 정리
 ```
 
 ---
