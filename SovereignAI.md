@@ -262,7 +262,7 @@ Solar Open에서 꽤 “시스템/운영 관점”으로 중요한 부분.
 - 응답 생성(generate)
 - 보상 계산(reward)
 - 학습(train)
-이게 서로 강하게 엮여 있어서, 뭔가를 바꾸면 파이프라인 전체가 흔들리기 쉬워.
+이게 서로 강하게 엮여 있어서, 뭔가를 바꾸면 파이프라인 전체가 흔들리기 쉬움.
 
 ### SnapPO의 아이디어 (핵심 한 문장)
 **generation / reward computation / training을 분리(decouple)하고, 중간 결과를 저장(caching)해서 반복 실험을 빠르게 만든다.**
