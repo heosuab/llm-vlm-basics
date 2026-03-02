@@ -191,13 +191,13 @@
 **Solar Open은 Korean(저자원 언어) + English를 중심으로 한 102B MoE LLM**로,  
 (1) **대규모 synthetic data(4.5T tokens)**로 데이터 부족을 메우고,  
 (2) **bilingual + reasoning 타깃 커리큘럼(총 20T tokens 규모 학습)**을 설계하며,  
-(3) **SnapPO(분리형 off-policy RL 프레임워크)**로 reasoning/정렬을 확장 가능하게 만든 것이 핵심이다. :contentReference[oaicite:1]{index=1}
+(3) **SnapPO(분리형 off-policy RL 프레임워크)**로 reasoning/정렬을 확장 가능하게 만든 것이 핵심이다. 
 
 ---
 
 ## 1) 문제의식 (Motivation)
-- 오픈 LLM 생태계가 “민주화”를 말하지만 실제로는 **영어/중국어 중심**이라, 많은 언어(예: Korean)는 데이터·모델 양쪽에서 불리함 :contentReference[oaicite:2]{index=2}  
-- Korean은 웹 비중이 낮아(문서에서 “data scarcity” 강조) 강한 Korean LLM을 만들려면 **데이터 생성/큐레이션이 필수**라는 관점 :contentReference[oaicite:3]{index=3}  
+- 오픈 LLM 생태계가 “민주화”를 말하지만 실제로는 **영어/중국어 중심**이라, 많은 언어(예: Korean)는 데이터·모델 양쪽에서 불리함  
+- Korean은 웹 비중이 낮아(문서에서 “data scarcity” 강조) 강한 Korean LLM을 만들려면 **데이터 생성/큐레이션이 필수**라는 관점  
 
 ---
 
@@ -208,57 +208,56 @@
 - **Context length:** 131,072  
 - **Vocab size:** 196,608  
 - **Layers:** 48 / **Hidden:** 4096 / **Heads:** 64 (KV heads 8)  
-- **Experts:** total 129 (= routed 128 + shared 1), **Top-k = 8** :contentReference[oaicite:4]{index=4}  
+- **Experts:** total 129 (= routed 128 + shared 1), **Top-k = 8**   
 
-> 설계 의도: 리소스 제약 하에서 “훈련/추론 효율”을 최대화하면서도, 안정적인 학습을 위해 기존 검증된 MoE 패턴(Top-k, shared expert, load balancing 등)을 활용 :contentReference[oaicite:5]{index=5}
+> 설계 의도: 리소스 제약 하에서 “훈련/추론 효율”을 최대화하면서도, 안정적인 학습을 위해 기존 검증된 MoE 패턴(Top-k, shared expert, load balancing 등)을 활용
 
 ---
 
 ## 3) Tokenizer 설계 (Korean + reasoning 친화)
-- **byte-level BPE**, vocab **196,608**로 크게 잡고 Korean 및 타깃 도메인을 oversample해서 학습 :contentReference[oaicite:6]{index=6}  
+- **byte-level BPE**, vocab **196,608**로 크게 잡고 Korean 및 타깃 도메인을 oversample해서 학습  
 - reasoning/code에 유리한 규칙을 pre-tokenization에 반영:
   - **digit splitting**(숫자를 안정적으로 다루게)
-  - **whitespace preservation**(특히 Python indentation 등 코드 품질) :contentReference[oaicite:7]{index=7}  
-- tokenizer 효율은 bytes-per-token 관점에서 비교 평가를 수행하고, Korean에서 특히 이점을 강조 :contentReference[oaicite:8]{index=8}  
+  - **whitespace preservation**(특히 Python indentation 등 코드 품질)  
+- tokenizer 효율은 bytes-per-token 관점에서 비교 평가를 수행하고, Korean에서 특히 이점을 강조  
 
 ---
 
 ## 4) Pre-training: “데이터 부족을 이기는 방법”
 ### 4.1 데이터 구성 (대규모 + 도메인 + synthetic)
 - pre-training용으로 약 **19.7T tokens** 규모를 구성했고,
-- 공개 라이선스 데이터 + 도메인 수집(금융/법/의학) + PDF parsing + **synthetic data(4.5T tokens)**를 결합 :contentReference[oaicite:9]{index=9}  
+- 공개 라이선스 데이터 + 도메인 수집(금융/법/의학) + PDF parsing + **synthetic data(4.5T tokens)**를 결합   
 
 ### 4.2 커리큘럼: Low → High quality로 점진 강화
 - multi-phase 커리큘럼:
   - 초반: noisy하지만 폭넓게(coverage 우선)
   - 후반: 더 높은 품질 필터/threshold 적용 + synthetic 비중 증가  
-- “교육적 품질(educational quality) 점수”, “topic filtering(embedding 기반)” 같은 다층 필터링을 소개 :contentReference[oaicite:10]{index=10}  
-
+- “교육적 품질(educational quality) 점수”, “topic filtering(embedding 기반)” 같은 다층 필터링을 소개
+  
 ### 4.3 엔지니어링 최적화(훈련 throughput)
-- B200 클러스터에서 throughput을 크게 끌어올리기 위한 최적화(프레임워크 선택, sharding, MoE 커널/라우터 dtype, data loading 등)를 상세히 기록 :contentReference[oaicite:11]{index=11}  
+- B200 클러스터에서 throughput을 크게 끌어올리기 위한 최적화(프레임워크 선택, sharding, MoE 커널/라우터 dtype, data loading 등)를 상세히 기록  
 
 ---
 
 ## 5) Mid-training: reasoning 강화용 “trajectory” 합성
 - pre-training과 같은 next-token objective를 유지하면서,
-- 어려운 문제에 대해 **여러 개의 diverse reasoning trajectory(2~5개 접근)**를 생성해 “atomic reasoning step”의 다양성을 늘리는 전략 :contentReference[oaicite:12]{index=12}  
-- long-context 데이터도 섞어 window 확장 + catastrophic forgetting 방지용 데이터 포함 :contentReference[oaicite:13]{index=13}  
+- 어려운 문제에 대해 **여러 개의 diverse reasoning trajectory(2~5개 접근)**를 생성해 “atomic reasoning step”의 다양성을 늘리는 전략  
+- long-context 데이터도 섞어 window 확장 + catastrophic forgetting 방지용 데이터 포함 
 
 ---
 
 ## 6) Post-training: SFT (데이터 설계 중심)
 ### 6.1 Difficulty-aware curation
 - “너무 쉬운 샘플은 효율이 낮고, 너무 어려우면 학습 신호가 약하다”는 전제에서  
-  **difficulty estimator**로 난이도 균형을 맞추는 전략 :contentReference[oaicite:14]{index=14}  
-
+  **difficulty estimator**로 난이도 균형을 맞추는 전략
+  
 ### 6.2 Agent capability (tool-use simulation)
 - tool spec을 합성/확장하고,
-- task-oriented / user-oriented simulator로 **multi-turn tool-use trajectory**를 대규모 생성 :contentReference[oaicite:15]{index=15}  
+- task-oriented / user-oriented simulator로 **multi-turn tool-use trajectory**를 대규모 생성
 
 ### 6.3 Korean knowledge + safety
-- Korean 문화/역사 지식을 multi-hop QA로 구성해 관계적 이해를 유도 :contentReference[oaicite:16]{index=16}  
-- safety는 **38개 risk category**를 정의하고, “refuse with redirection” vs “safe completion” 같은 대응 전략을 제시 :contentReference[oaicite:17]{index=17}  
-
+- Korean 문화/역사 지식을 multi-hop QA로 구성해 관계적 이해를 유도 
+- safety는 **38개 risk category**를 정의하고, “refuse with redirection” vs “safe completion” 같은 대응 전략을 제시 
 ---
 
 ## 7) Post-training: RL 핵심 = SnapPO
@@ -267,21 +266,18 @@
   - 확장성(리소스 추가 시 throughput 선형 증가)
   - reward/데이터 조합의 유연성
   - 반복 실험 비용 절감  
-  을 얻는다고 주장 :contentReference[oaicite:18]{index=18}  
+  을 얻는다고 주장
 
 ### RL Phase A / B
-- **Phase A:** reasoning capability 최적화(STEM, code, agent 등) :contentReference[oaicite:19]{index=19}  
-- **Phase B:** preference alignment + safety + degeneration 대응(DPO 포함), reasoning 유지용 데이터도 함께 사용 :contentReference[oaicite:20]{index=20}  
-
+- **Phase A:** reasoning capability 최적화(STEM, code, agent 등) 
+- **Phase B:** preference alignment + safety + degeneration 대응(DPO 포함), reasoning 유지용 데이터도 함께 사용
 ---
 
 ## 8) Evaluation에서 강조하는 메시지
-- Korean/English 모두에서 폭넓은 벤치마크(지식, 도메인, 수학, 코드, IF, preference, agent, long-context)를 사용 :contentReference[oaicite:21]{index=21}  
-- 결과 해석은 “Korean 도메인 지식(금융/법/의학) + preference alignment를 특히 강하게 만들었다”는 방향으로 정리 :contentReference[oaicite:22]{index=22}  
+- Korean/English 모두에서 폭넓은 벤치마크(지식, 도메인, 수학, 코드, IF, preference, agent, long-context)를 사용  
+- 결과 해석은 “Korean 도메인 지식(금융/법/의학) + preference alignment를 특히 강하게 만들었다”는 방향으로 정리 
 
----
-
-## 9) 결론(문서가 말하는 핵심 기여)
+## 9) 결론
 1) **synthetic data로 저자원 언어 데이터 부족을 해결**  
 2) **bilingual + reasoning 목표에 맞춘 커리큘럼/필터링 설계**  
 3) **SnapPO로 RL을 스케일 가능하게 구성**  
