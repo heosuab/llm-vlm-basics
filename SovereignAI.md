@@ -280,7 +280,7 @@ Solar Open에서 꽤 “시스템/운영 관점”으로 중요한 부분.
 - iterative DPO를 SnapPO에 넣어서 사용
 ---
 
-## 7) Evaluation에서 강조하는 메시지
+## 7) Evaluation
 - Korean/English 모두에서 폭넓은 벤치마크(지식, 도메인, 수학, 코드, IF, preference, agent, long-context)를 사용  
 - 결과 해석은 “Korean 도메인 지식(금융/법/의학) + preference alignment를 특히 강하게 만들었다”는 방향으로 정리 
 
