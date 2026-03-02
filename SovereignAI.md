@@ -275,7 +275,7 @@ Solar Open에서 꽤 “시스템/운영 관점”으로 중요한 부분.
 
 ### RL Phase A / B
 - **Phase A:** reasoning capability 최적화(STEM, code, agent 등)
-- Group Sequence Preference Optimization (GSPO)를 SnapPO에 넣어서 사용
+- Group Sequence Policy Optimization (GSPO)를 SnapPO에 넣어서 사용
 - **Phase B:** preference alignment + safety + degeneration 대응(DPO 포함), reasoning 유지용 데이터도 함께 사용
 - iterative DPO를 SnapPO에 넣어서 사용
 ---
