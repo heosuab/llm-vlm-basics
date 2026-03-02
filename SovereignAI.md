@@ -255,12 +255,23 @@
 ---
 
 ## 6) Post-training: RL 핵심 = SnapPO
-### SnapPO (Snapshot Sampling for Policy Optimization)
-- RL을 **generation / reward computation / training** 3단계로 **분리(decouple)**하고 캐싱해,
-  - 확장성(리소스 추가 시 throughput 선형 증가)
-  - reward/데이터 조합의 유연성
-  - 반복 실험 비용 절감  
-  을 얻는다고 주장
+Solar Open에서 꽤 “시스템/운영 관점”으로 중요한 부분.
+
+### SnapPO가 해결하려는 문제
+보통 RL은
+- 응답 생성(generate)
+- 보상 계산(reward)
+- 학습(train)
+이게 서로 강하게 엮여 있어서, 뭔가를 바꾸면 파이프라인 전체가 흔들리기 쉬워.
+
+### SnapPO의 아이디어 (핵심 한 문장)
+**generation / reward computation / training을 분리(decouple)하고, 중간 결과를 저장(caching)해서 반복 실험을 빠르게 만든다.**
+
+✅ 쉽게 말하면:
+- “응답을 먼저 대량으로 뽑아두고”
+- “보상 계산도 따로 돌리고”
+- “그 결과를 모아서 학습”
+을 **각자 독립적으로** 할 수 있게 만들어서 **확장성과 실험 속도**를 올리는 방식.
 
 ### RL Phase A / B
 - **Phase A:** reasoning capability 최적화(STEM, code, agent 등) 
