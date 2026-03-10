@@ -103,7 +103,7 @@
 
 ---
 
-# HyperCLOVA X 8B Omni (OMNI)
+# HyperCLOVA X 8B Omni (NAVER)
 
 ---
 
@@ -183,7 +183,7 @@
 
 ---
 
-# Solar Open Technical Report (Upstage)
+# Solar (Upstage)
 
 ---
 
